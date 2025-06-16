@@ -1,32 +1,44 @@
 import streamlit as st
 
-# BMI 계산 함수
-def calculate_bmi(weight, height):
-    return weight / (height / 100) ** 2
+# 게임 상태를 저장하는 세션 상태 초기화
+if 'game_started' not in st.session_state:
+    st.session_state.game_started = False
+if 'turn' not in st.session_state:
+    st.session_state.turn = 'player1'
+if 'questions' not in st.session_state:
+    st.session_state.questions = []
 
-# 사용자 인터페이스 설정
-st.title("BMI 계산기")
+# 게임 시작 화면
+if not st.session_state.game_started:
+    st.title("스무고개 게임")
+    st.write("게임을 시작하려면 아래 버튼을 클릭하세요.")
+    if st.button("게임 시작"):
+        st.session_state.game_started = True
+        st.session_state.turn = 'player1'
+        st.session_state.questions = []
+        st.experimental_rerun()
 
-# 사용자 입력 받기
-with st.form("bmi_form"):
-    weight = st.number_input("체중 (kg)", min_value=1, max_value=200, step=0.1)
-    height = st.number_input("키 (cm)", min_value=50, max_value=250, step=1)
-    submitted = st.form_submit_button("계산")
+# 게임 진행 화면
+else:
+    st.title(f"스무고개 게임 - {st.session_state.turn}의 차례")
 
-# BMI 계산 및 결과 출력
-if submitted:
-    if weight > 0 and height > 0:
-        bmi = calculate_bmi(weight, height)
-        st.write(f"당신의 BMI는 {bmi:.2f}입니다.")
+    # 질문 기록 표시
+    if st.session_state.questions:
+        st.write("이전에 나온 질문들:")
+        for q in st.session_state.questions:
+            st.write(f"- {q}")
 
-        # BMI 범위에 따른 건강 상태 평가
-        if bmi < 18.5:
-            st.warning("저체중입니다.")
-        elif 18.5 <= bmi < 23.0:
-            st.success("정상 체중입니다.")
-        elif 23.0 <= bmi < 25.0:
-            st.warning("과체중입니다.")
+    # 질문 입력 및 제출
+    question = st.text_input("질문을 입력하세요:")
+    if st.button("질문 제출"):
+        if question:
+            st.session_state.questions.append(question)
+            st.session_state.turn = 'player2' if st.session_state.turn == 'player1' else 'player1'
+            st.experimental_rerun()
         else:
-            st.error("비만입니다.")
-    else:
-        st.error("체중과 키를 올바르게 입력해주세요.")
+            st.warning("질문을 입력해주세요.")
+
+    # 게임 종료 버튼
+    if st.button("게임 종료"):
+        st.session_state.game_started = False
+        st.experimental_rerun()
